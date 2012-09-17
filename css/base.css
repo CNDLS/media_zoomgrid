@@ -1,0 +1,63 @@
+ body{
+  background-color:#667;
+  font-family: Tahoma, Geneva, Helvetica, Arial, sans-serif;
+  font-size:14px;
+}
+table#grid{
+  border-spacing:0;
+  border-collapse:collapse;
+  border:2px solid black;
+  -moz-box-shadow:    0 2px 3px 3px rgba(0, 0, 0, 0.25);
+  -webkit-box-shadow: 0 2px 3px 3px rgba(0, 0, 0, 0.25);
+  box-shadow:         0 2px 3px 3px rgba(0, 0, 0, 0.25);
+	width: 1076px;
+	height: 510px;
+}
+td, th{
+  border:1px solid black;
+}
+td.cell{
+  width:12em;
+  height:8em;
+  background-color:#222;
+  margin:0;
+}
+td.cell:hover{
+	-webkit-box-shadow: inset 0 0 50px rgba(255,255,255,0.25);
+  -moz-box-shadow: inset 0 0 50px rgba(255,255,255,0.25);
+  box-shadow: inset 0 0 50px rgba(255,255,255,0.25);
+}
+th.col, td.row{
+  width:12em;
+  height:1.5em;
+  max-height:1.5em;
+  text-align:center;
+  white-space:nowrap;
+  background-color:#ccc;
+}
+td.row{
+  width:1.5em;
+  max-width:1.5em;
+}
+th.col:hover, td.row:hover{
+  background-color:white;
+}
+th.col label{
+  text-shadow: rgba(255, 255, 255, 0.8) 0 1px 1px;
+}
+td.row label{
+  display: inline-block;
+  font-weight: bold;
+  margin-left:-50%;
+  text-shadow: rgba(255, 255, 255, 0.8) -1px 0 1px;
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+}
+#x{
+  width:1.5em;
+  max-width:1.5em;
+  height:1.5em;
+  max-height:1.5em;
+  background-color:black;
+}
