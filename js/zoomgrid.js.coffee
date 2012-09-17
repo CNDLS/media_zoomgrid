@@ -61,24 +61,28 @@ class window.Grid
 		
 	expand_column: (column_element, grid_column) ->
 		@columns.not(column_element).animate({ width:@contracted_column_width }, Grid.anim_cmd)
-		$(column_element).animate({ width:(2*@contracted_column_width) }, Grid.anim_cmd)
+		column_opening_cmd = $.extend({ complete:grid_column.show_content }, Grid.anim_cmd)
+		$(column_element).animate({ width:(2*@contracted_column_width) }, column_opening_cmd)
 		@rows.nextAll().andSelf().animate({ height:@normal_row_height }, Grid.anim_cmd)
 		# animate colors
 		@rows.nextAll().animate({ backgroundColor:@cell_color }, Grid.anim_cmd)
+		column_opening_cmd = $.extend({ complete:grid_column.show_content }, Grid.anim_cmd)
 		grid_column.get_cells().animate({ backgroundColor:@selected_column_color }, Grid.anim_cmd)
 		
 		
 	expand_row: (row_element, grid_row) ->
 		# expand row. collapse other rows & columns, too, if nec.
 		@rows.nextAll().andSelf().not(row_element).animate({ height:@contracted_row_height }, Grid.anim_cmd)
-		$(row_element).nextAll().andSelf().animate({ height:(2*@contracted_row_height) }, Grid.anim_cmd)
+		grid_row.get_cells().animate({ height:(2*@contracted_row_height) }, Grid.anim_cmd)
+		row_opening_cmd = $.extend({ complete:grid_row.show_content }, Grid.anim_cmd)
+		$(row_element).animate({ height:(2*@contracted_row_height) }, row_opening_cmd)
 		@columns.animate({ width:@normal_column_width }, Grid.anim_cmd)
 		# animate colors
 		@rows.nextAll().animate({ backgroundColor:@cell_color }, Grid.anim_cmd)
-		$(row_element).nextAll().animate({ backgroundColor:@selected_row_color }, Grid.anim_cmd)
+		grid_row.get_cells().animate({ backgroundColor:@selected_row_color }, Grid.anim_cmd)
 		
 		
-	expand_cell: (cell_element) ->
+	expand_cell: (cell_element, grid_cell) ->
 		column_nbr = $(cell_element).data("column-nbr")
 		row_nbr = $(cell_element).data("row-nbr")
 		cell_column_element = @columns.get(column_nbr - 1)
@@ -91,7 +95,9 @@ class window.Grid
 		@rows.nextAll().animate({ backgroundColor:@cell_color }, Grid.anim_cmd)
 		$(cell_row_element).nextAll().animate({ backgroundColor:@selected_row_color }, Grid.anim_cmd)
 		$(".cell[data-column-nbr="+$(cell_column_element).data("ordinal")+"]").animate({ backgroundColor:@selected_column_color }, Grid.anim_cmd)
-		$(cell_element).animate({ backgroundColor:"white" }, Grid.anim_cmd)
+		cell_opening_cmd = $.extend({ complete:grid_cell.show_content }, Grid.anim_cmd)
+		$(cell_element).animate({ backgroundColor:"white" },  cell_opening_cmd)
+		
 		
 	reset: ->
 		@columns.animate({ width:@normal_column_width }, Grid.anim_cmd)
@@ -112,6 +118,9 @@ class GridColumn
 			
 	get_cells: ->
 		return $(".cell[data-column-nbr="+$(@element).data("ordinal")+"]")
+		
+	show_content: ->
+		alert("column content")
 			
 
 class GridRow
@@ -119,11 +128,21 @@ class GridRow
 		$(@element).click (e) =>
 			@grid.expand_row(@element, this)
 			
+	get_cells: ->
+		return $(@element).nextAll()
+			
+	show_content: ->
+		alert("row content")
+			
 
 class GridCell
 	constructor: (@element, @grid) ->
 		$(@element).click (e) =>	
-				@grid.expand_cell(@element)
+				@grid.expand_cell(@element, this)
+				
+	show_content: ->
+		alert("content")
+		
 			
 class ResetBtn
 	constructor: (@element, @grid) ->
