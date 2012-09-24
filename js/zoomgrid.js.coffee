@@ -14,7 +14,21 @@ window.unpack = (obj) ->
 
 class window.Grid
 	@anim_duration = 250
-	@anim_cmd = { duration: Grid.anim_duration, queue: false }
+	@anim_cmd = { duration: Grid.anim_duration, queue: false, easing: "linear" }
+	
+	@info_card_margin = 20
+	@create_info_card = (info, grid_member) =>
+		div = document.createElement("div")
+		info_card = $(div).html(info)
+			.addClass("info")
+			.css('margin', @info_card_margin)
+			.width(grid_member.content_width() - (2 * @info_card_margin))
+			.height(grid_member.content_height() - (2 * @info_card_margin))
+			.addClass(grid_member.constructor.name.toLowerCase())
+		info_card.appendTo(grid_member.element)
+			.position(grid_member.content_position())
+		return info_card
+		
 	
 	constructor: (@table) ->
 		# we get our columns, rows, and cells from the elements that were rendered for them.
@@ -27,6 +41,8 @@ class window.Grid
 		@selected_row_color = "#873220"
 		@selected_column_color = "#9a1000"
 		@selected_cell_color = "#cc877f"
+		
+		@info_card = null
 		
 		
 		if @cells.length != (@columns.length * @rows.length)
@@ -46,23 +62,43 @@ class window.Grid
 		@reset_btn.each (index, btn) =>
 			new ResetBtn(btn, this)
 			
-		# size grid columns to start.
+			
+		# get column size targets.
 		all_columns_width = @columns.width() * @columns.length
 		@normal_column_width = all_columns_width / (1.0 * (@columns.length))
-		@contracted_column_width = all_columns_width / (1.0 * (@columns.length + 1))
-		@columns.animate({ width:@normal_column_width }, 20)
+		@unselected_column_width = all_columns_width / (1.0 * (@columns.length + 1))
+		@selected_column_width = 2 * @unselected_column_width
+		if (@columns.length > 2)
+			@unopened_column_width = all_columns_width / (1.0 * (@columns.length + 2))
+			@opened_column_width = 3 * @selected_column_width
+		else
+			@unopened_column_width = @unselected_column_width
+			@opened_column_width = @selected_column_width
 		
-		# size grid rows to start.
+	# get row size targets.
 		all_rows_height = @rows.height() * @rows.length
 		@normal_row_height = all_rows_height / (1.0 * (@rows.length))
-		@contracted_row_height = all_rows_height / (1.0 * (@rows.length + 1))
-		@rows.animate({ height:@normal_row_height }, 20)
+		@unselected_row_height = all_rows_height / (1.0 * (@rows.length + 1))
+		@selected_row_height = 2 * @unselected_row_height
+		if (@rows.length > 2)
+			@unopened_row_height = all_rows_height / (1.0 * (@rows.length + 2))
+			@opened_row_height = 3 * @unopened_row_height
+		else
+			@unopened_row_height = @unselected_row_height
+			@opened_row_height = @selected_row_height
+		
+		# size columns & rows to start.
+		@columns.animate({ width:@normal_column_width }, 20, "linear")
+		@rows.animate({ height:@normal_row_height }, 20, Grid.anim_easing)
 		
 		
-	expand_column: (column_element, grid_column) ->
-		@columns.not(column_element).animate({ width:@contracted_column_width }, Grid.anim_cmd)
+	select_column: (column_element, grid_column) ->
+		if (@columns.length == 1) then return
+		@info_card.remove() unless (@info_card == null)
+		# animate sizes
+		@columns.not(column_element).animate({ width:@unselected_column_width }, Grid.anim_cmd)
 		column_opening_cmd = $.extend({ complete:grid_column.show_content }, Grid.anim_cmd)
-		$(column_element).animate({ width:(2*@contracted_column_width) }, column_opening_cmd)
+		$(column_element).animate({ width:@selected_column_width }, column_opening_cmd)
 		@rows.nextAll().andSelf().animate({ height:@normal_row_height }, Grid.anim_cmd)
 		# animate colors
 		@rows.nextAll().animate({ backgroundColor:@cell_color }, Grid.anim_cmd)
@@ -70,27 +106,32 @@ class window.Grid
 		grid_column.get_cells().animate({ backgroundColor:@selected_column_color }, Grid.anim_cmd)
 		
 		
-	expand_row: (row_element, grid_row) ->
-		# expand row. collapse other rows & columns, too, if nec.
-		@rows.nextAll().andSelf().not(row_element).animate({ height:@contracted_row_height }, Grid.anim_cmd)
-		grid_row.get_cells().animate({ height:(2*@contracted_row_height) }, Grid.anim_cmd)
+	select_row: (row_element, grid_row) ->
+		if (@rows.length == 1) then return
+		@info_card.remove() unless (@info_card == null)
+		# animate sizes
+		@rows.nextAll().andSelf().not(row_element).animate({ height:@unselected_row_height }, Grid.anim_cmd)
+		grid_row.get_cells().animate({ height:@selected_row_height }, Grid.anim_cmd)
 		row_opening_cmd = $.extend({ complete:grid_row.show_content }, Grid.anim_cmd)
-		$(row_element).animate({ height:(2*@contracted_row_height) }, row_opening_cmd)
+		$(row_element).animate({ height:@selected_row_height }, row_opening_cmd)
 		@columns.animate({ width:@normal_column_width }, Grid.anim_cmd)
 		# animate colors
 		@rows.nextAll().animate({ backgroundColor:@cell_color }, Grid.anim_cmd)
 		grid_row.get_cells().animate({ backgroundColor:@selected_row_color }, Grid.anim_cmd)
 		
 		
-	expand_cell: (cell_element, grid_cell) ->
+	open_cell: (cell_element, grid_cell) ->	
+		if (@cells.length == 1) then return
+		@info_card.remove() unless (@info_card == null)
+		
 		column_nbr = $(cell_element).data("column-nbr")
 		row_nbr = $(cell_element).data("row-nbr")
 		cell_column_element = @columns.get(column_nbr - 1)
 		cell_row_element = @rows.get(row_nbr - 1)
-		@columns.not(cell_column_element).animate({ width:@contracted_column_width }, Grid.anim_cmd)
-		$(cell_column_element).animate({ width:(2*@contracted_column_width) }, Grid.anim_cmd)
-		@rows.nextAll().andSelf().not(cell_row_element).animate({ height:@contracted_row_height }, Grid.anim_cmd)
-		$(cell_row_element).nextAll().andSelf().animate({ height:(2*@contracted_row_height) }, Grid.anim_cmd)
+		@columns.not(cell_column_element).animate({ width:@unopened_column_width }, Grid.anim_cmd)
+		$(cell_column_element).animate({ width:@opened_column_width }, Grid.anim_cmd)
+		@rows.nextAll().andSelf().not(cell_row_element).animate({ height:@unopened_row_height }, Grid.anim_cmd)
+		$(cell_row_element).nextAll().andSelf().animate({ height:@opened_row_height }, Grid.anim_cmd)
 		# animate colors
 		@rows.nextAll().animate({ backgroundColor:@cell_color }, Grid.anim_cmd)
 		$(cell_row_element).nextAll().animate({ backgroundColor:@selected_row_color }, Grid.anim_cmd)
@@ -99,9 +140,11 @@ class window.Grid
 		$(cell_element).animate({ backgroundColor:"white" },  cell_opening_cmd)
 		
 		
-	reset: ->
+	reset: ->	
+		@info_card.remove() unless (@info_card == null)
+		@cells.animate({ width:@normal_column_width, height:@normal_row_height }, Grid.anim_cmd)
 		@columns.animate({ width:@normal_column_width }, Grid.anim_cmd)
-		@rows.nextAll().andSelf().animate({ height:@normal_row_height }, Grid.anim_cmd)
+		@rows.animate({ height:@normal_row_height }, Grid.anim_cmd)
 		# animate colors
 		@rows.nextAll().animate({ backgroundColor:@cell_color }, Grid.anim_cmd)
 		@columns.each( (index, element) ->
@@ -112,41 +155,63 @@ class window.Grid
 # okay, right now there's not much here, but the Grid code should probably be refactored
 # and some stuff put into these classes.
 class GridColumn
+	
 	constructor: (@element, @grid) ->
+		@cells = @.get_cells()
 		$(@element).click (e) =>
-			@grid.expand_column(@element, this)
+			@grid.select_column(@element, this)
 			
 	get_cells: ->
 		return $(".cell[data-column-nbr="+$(@element).data("ordinal")+"]")
 		
-	show_content: ->
-		alert("column content")
+	show_content: =>
+		@grid.info_card = Grid.create_info_card("column info", this)
+		
+	content_width: ->
+		return @cells.width()
+		
+	content_height: ->
+		return (@cells.height() * @cells.length)
+		
+	content_position: ->
+		return @cells.eq(0).position()
 			
 
 class GridRow
 	constructor: (@element, @grid) ->
+		@cells = @.get_cells()
 		$(@element).click (e) =>
-			@grid.expand_row(@element, this)
+			@grid.select_row(@element, this)
 			
 	get_cells: ->
 		return $(@element).nextAll()
 			
-	show_content: ->
-		alert("row content")
+	show_content: =>
+		@grid.info_card = Grid.create_info_card("row info", this)
+		
+	content_width: ->	
+		return (@cells.width() * @cells.length)
+
+	content_height: ->
+		return @cells.height()
+		
+	content_position: ->
+		return $(@element).parent("tr").position()
 			
 
 class GridCell
 	constructor: (@element, @grid) ->
 		$(@element).click (e) =>	
-				@grid.expand_cell(@element, this)
+			@grid.info_card.remove() unless (@grid.info_card == null)
+			@grid.open_cell(@element, this)
 				
-	show_content: ->
-		alert("content")
+	show_content: =>
+		# @grid.info_card = Grid.create_info_card("cell info", this)
 		
 			
 class ResetBtn
 	constructor: (@element, @grid) ->
-		$(@element).click (e) =>	
+		$(@element).click (e) =>
 				@grid.reset()
 	
 
