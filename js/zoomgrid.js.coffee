@@ -25,8 +25,6 @@ class window.Grid
 			.width(grid_member.content_width() - (2 * @info_card_margin))
 			.height(grid_member.content_height() - (2 * @info_card_margin))
 			.addClass(grid_member.constructor.name.toLowerCase())
-		info_card.appendTo(grid_member.element)
-			.position(grid_member.content_position())
 		return info_card
 		
 	
@@ -166,6 +164,7 @@ class GridColumn
 		
 	show_content: =>
 		@grid.info_card = Grid.create_info_card("column info", this)
+		@grid.info_card.appendTo(@element).position(@.content_position())
 		
 	content_width: ->
 		return @cells.width()
@@ -188,6 +187,8 @@ class GridRow
 			
 	show_content: =>
 		@grid.info_card = Grid.create_info_card("row info", this)
+		@grid.info_card.appendTo(@grid.reset_btn)
+		# @grid.info_card.position(@.content_position())
 		
 	content_width: ->	
 		return (@cells.width() * @cells.length)
@@ -196,7 +197,7 @@ class GridRow
 		return @cells.height()
 		
 	content_position: ->
-		return $(@element).parent("tr").position()
+		return @cells.eq(0).position()
 			
 
 class GridCell
