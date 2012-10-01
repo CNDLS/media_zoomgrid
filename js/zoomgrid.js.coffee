@@ -49,13 +49,13 @@ class window.Grid
 			
 		# instantiate objects for our columns, rows, and cells
 		@columns.each (index, column) =>
-			new GridColumn(column, this)
+			new GridColumn(column, this, index)
 			
 		@rows.each (index, row) =>
-			new GridRow(row, this)
+			new GridRow(row, this, index)
 			
 		@cells.each (index, cell) =>
-			new GridCell(cell, this)
+			new GridCell(cell, this, index)
 			
 		@reset_btn.each (index, btn) =>
 			new ResetBtn(btn, this)
@@ -154,7 +154,7 @@ class window.Grid
 # and some stuff put into these classes.
 class GridColumn
 	
-	constructor: (@element, @grid) ->
+	constructor: (@element, @grid, @index) ->
 		@cells = @.get_cells()
 		$(@element).click (e) =>
 			@grid.select_column(@element, this)
@@ -163,8 +163,8 @@ class GridColumn
 		return $(".cell[data-column-nbr="+$(@element).data("ordinal")+"]")
 		
 	show_content: =>
-		@grid.info_card = Grid.create_info_card("column info", this)
-		@grid.info_card.appendTo(@element).position(@.content_position())
+		@grid.info_card = Grid.create_info_card(columns_json[@index].fields.description, this)
+		@grid.info_card.appendTo(@element)
 		
 	content_width: ->
 		return @cells.width()
@@ -176,8 +176,10 @@ class GridColumn
 		return @cells.eq(0).position()
 			
 
+
 class GridRow
-	constructor: (@element, @grid) ->
+	
+	constructor: (@element, @grid, @index) ->
 		@cells = @.get_cells()
 		$(@element).click (e) =>
 			@grid.select_row(@element, this)
@@ -186,9 +188,13 @@ class GridRow
 		return $(@element).nextAll()
 			
 	show_content: =>
-		@grid.info_card = Grid.create_info_card("row info", this)
-		@grid.info_card.appendTo(@grid.reset_btn)
-		# @grid.info_card.position(@.content_position())
+		console.log rows_json
+		@grid.info_card = Grid.create_info_card(rows_json[@index].fields.description, this)
+		@grid.info_card.appendTo(@element)
+		card_offset = @cells.eq(0).offset()
+		card_margin = parseInt( @grid.info_card.css("margin"), 10)
+		card_offset = { left: card_offset.left + card_margin, top: card_offset.top + card_margin }
+		@grid.info_card.offset(card_offset)
 		
 	content_width: ->	
 		return (@cells.width() * @cells.length)
@@ -197,11 +203,15 @@ class GridRow
 		return @cells.height()
 		
 	content_position: ->
-		return @cells.eq(0).position()
-			
+		cells_pos = @cells.eq(0).position()
+		cells_pos.left = cells_pos.left + 200
+		console.log cells_pos
+		return cells_pos
+		
+
 
 class GridCell
-	constructor: (@element, @grid) ->
+	constructor: (@element, @grid, @index) ->
 		$(@element).click (e) =>	
 			@grid.info_card.remove() unless (@grid.info_card == null)
 			@grid.open_cell(@element, this)
