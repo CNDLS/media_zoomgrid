@@ -14,6 +14,7 @@ table#grid{
 	height: 510px;
 	margin: 0 auto auto;
 	z-index: 2;
+	
 }
 td, th{
   border:1px solid black;
@@ -21,7 +22,7 @@ td, th{
 td.cell{
   width:12em;
   height:8em;
-  background-color:#222;
+  background-color:#333;
   margin:0;
 }
 td.cell:hover{
@@ -66,6 +67,16 @@ td.row label{
 }
 .info {
 	position:absolute;
+}
+tbody th#x .info{
+	color: white;
+	font-size: 4em;
+	vertical-align:middle;
+	line-height: 8em; /* hack */
+	text-shadow: black 0 0.1em 0.5em;
+	letter-spacing: 0.1em;
+}
+th.col .info, td.row .info {
 	
 	border-radius: 1em;
   -moz-border-radius: 1em;

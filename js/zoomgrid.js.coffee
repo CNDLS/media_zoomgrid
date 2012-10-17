@@ -40,7 +40,8 @@ class window.Grid
 		@selected_column_color = "#9a1000"
 		@selected_cell_color = "#cc877f"
 		
-		@info_card = null
+		@info_card = Grid.create_info_card(@table.data("grid-title"), this)
+		@info_card.appendTo(@reset_btn).css("margin-left", @rows.width()*1.5)
 		
 		
 		if @cells.length != (@columns.length * @rows.length)
@@ -149,6 +150,13 @@ class window.Grid
 			$(".cell[data-column-nbr="+$(element).data("ordinal")+"]").animate({ backgroundColor:@cell_color }, Grid.anim_cmd)
 		)
 
+	content_width: ->
+		return (@cells.width() * @columns.length)
+
+	content_height: ->
+		return (@cells.height() * @rows.length)
+			
+			
 
 # okay, right now there's not much here, but the Grid code should probably be refactored
 # and some stuff put into these classes.
